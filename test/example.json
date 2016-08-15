@@ -1,0 +1,21 @@
+{
+"metadata" : {
+  "version" : "1.0"
+},
+"entries" : [
+{
+  "tags" : [
+    "Dream"
+  ],
+  "uuid" : "8E757B6783E24915802E98DD41743E45",
+  "starred" : false,
+  "text" : "Lorem ipsum dolor sic amet",
+  "creationDate" : "2016-08-15T12:27:17Z"
+},
+{
+  "uuid" : "870317EE535145D5A41F49B50461F792",
+  "starred" : false,
+  "text" : "Adisciping.",
+  "creationDate" : "2016-08-15T12:30:04Z"
+}
+]}
