@@ -1,10 +1,12 @@
 module Main where
 
+import System.Environment (getArgs)
 import Data.DayOne
-import qualified Data.ByteString.Lazy as BL
-import Data.Aeson (decode)
+import qualified Data.ByteString.Lazy.Char8 as BL
+import Data.Aeson (encode)
 
 main :: IO ()
 main = do
-  json <- BL.getContents
-  print (decode json :: Maybe DayOne)
+  [path] <- getArgs
+  journal <- fromDirectory path
+  BL.putStrLn (encode journal)
