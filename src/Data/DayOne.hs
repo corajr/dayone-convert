@@ -1,7 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Data.DayOne where
 
-import Data.DayOne.JSON (defaultOptions')
 import Data.Aeson.TH
 import Data.Time (UTCTime)
 import Data.Char (toUpper)
@@ -16,7 +15,7 @@ data Metadata = Metadata { version :: String }
 defaultMetadata :: Metadata
 defaultMetadata = Metadata { version = "1.0" }
 
-$(deriveJSON defaultOptions' ''Metadata)
+$(deriveJSON defaultOptions ''Metadata)
 
 data Entry = Entry
   { tags :: Maybe [String]
@@ -26,14 +25,14 @@ data Entry = Entry
   , creationDate :: UTCTime
   } deriving (Eq, Show)
 
-$(deriveJSON defaultOptions' ''Entry)
+$(deriveJSON defaultOptions { omitNothingFields = True } ''Entry)
 
 data DayOne = DayOne
   { metadata :: Metadata
   , entries :: [Entry]
   } deriving (Eq, Show)
 
-$(deriveJSON defaultOptions' ''DayOne)
+$(deriveJSON defaultOptions ''DayOne)
 
 getUUID :: IO String
 getUUID = do

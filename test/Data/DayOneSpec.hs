@@ -54,6 +54,9 @@ exampleEntry = Entry
   , creationDate = modTime
   }
 
+blankUUID :: Entry -> Entry
+blankUUID entry = entry { uuid = "" }
+
 spec :: Spec
 spec = do
   describe "FromJSON instance" $ do
@@ -61,4 +64,10 @@ spec = do
       decode (BL.pack exampleJson) `shouldBe` Just exampleParsed
   describe "fromFile" $ do
     it "takes a path to a text file and returns an `Entry`" $ do
-      fmap (\x -> (text x, creationDate x)) (fromFile "test/example.txt") `shouldReturn` (text exampleEntry, creationDate exampleEntry)
+      fmap blankUUID (fromFile "test/example/example.txt") `shouldReturn` exampleEntry
+  describe "fromDirectory" $ do
+    it "takes a directory path and converts all files into a DayOne value" $ do
+      let f x = x { entries = map blankUUID (entries x) }
+      fmap f (fromDirectory "test/example") `shouldReturn` DayOne { metadata = defaultMetadata
+                                                                  , entries = [exampleEntry]
+                                                                  }
