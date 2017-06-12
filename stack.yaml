@@ -1,12 +1,6 @@
-flags:
-  semigroups:
-    bytestring-builder: false
+flags: {}
 extra-package-dbs: []
 packages:
 - '.'
-extra-deps:
-- aeson-1.0.0.0
-- directory-1.2.7.0
-- semigroups-0.18.2
-- text-1.2.2.1
-resolver: lts-6.12
+extra-deps: []
+resolver: lts-8.13
