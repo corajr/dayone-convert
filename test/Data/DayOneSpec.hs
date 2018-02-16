@@ -11,6 +11,7 @@ import Data.Aeson
 import Data.Time
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.DayOne
+import System.Directory (getModificationTime)
 
 -- `main` is here so that this module can be run from GHCi on its own.  It is
 -- not needed for automatic spec discovery.
@@ -20,14 +21,14 @@ main = hspec spec
 exampleJson :: String
 exampleJson = [hereFile|test/example.json|]
 
+getModTime :: IO UTCTime
+getModTime = getModificationTime "test/example/example.txt"
+
 t1 :: UTCTime
 t1 = UTCTime (fromGregorian 2016 8 15) 44837
 
 t2 :: UTCTime
 t2 = UTCTime (fromGregorian 2016 8 15) 45004
-
-modTime :: UTCTime
-modTime = UTCTime (fromGregorian 2016 8 15) 80131
 
 exampleParsed :: DayOne
 exampleParsed = DayOne
@@ -47,8 +48,8 @@ exampleParsed = DayOne
               ]
   }
 
-exampleEntry :: Entry
-exampleEntry = Entry
+exampleEntry :: UTCTime -> Entry
+exampleEntry modTime = Entry
   { tags = Nothing
   , uuid = ""
   , starred = False
@@ -59,22 +60,22 @@ exampleEntry = Entry
 blankUUID :: Entry -> Entry
 blankUUID entry = entry { uuid = "" }
 
-exampleDayone :: DayOne
-exampleDayone = DayOne
+exampleDayone :: UTCTime -> DayOne
+exampleDayone modTime = DayOne
   { metadata = defaultMetadata
-  , entries = [exampleEntry]
+  , entries = [exampleEntry modTime]
   }
 
-exampleEntryObject :: Value
-exampleEntryObject =
+exampleEntryObject :: UTCTime -> Value
+exampleEntryObject modTime =
   Object $ fromList [ ("text",String "This is a test.\n")
                     , ("uuid",String "")
                     , ("starred",Bool False)
-                    , ("creationDate",String "2016-08-15T22:15:31Z")]
+                    , ("creationDate", toJSON modTime)]
 
-exampleDayoneObject :: Value
-exampleDayoneObject =
-  Object $ fromList [ ("entries", Array (fromList [exampleEntryObject]))
+exampleDayoneObject :: UTCTime -> Value
+exampleDayoneObject modTime =
+  Object $ fromList [ ("entries", Array (fromList [exampleEntryObject modTime]))
                     , ("metadata", Object (fromList [("version",String "1.0")]))]
 
 spec :: Spec
@@ -84,11 +85,14 @@ spec = do
       decode (BL.pack exampleJson) `shouldBe` Just exampleParsed
   describe "ToJSON instance" $ do
     it "outputs valid JSON for a DayOne value" $ do
-      toJSON exampleDayone `shouldBe` exampleDayoneObject
+      modTime <- getModTime
+      toJSON (exampleDayone modTime) `shouldBe` exampleDayoneObject modTime
   describe "fromFile" $ do
     it "takes a path to a text file and returns an `Entry`" $ do
-      fmap blankUUID (fromFile "test/example/example.txt") `shouldReturn` exampleEntry
+      modTime <- getModTime
+      fmap blankUUID (fromFile "test/example/example.txt") `shouldReturn` exampleEntry modTime
   describe "fromDirectory" $ do
     it "takes a directory path and converts all files into a DayOne value" $ do
       let f x = x { entries = map blankUUID (entries x) }
-      fmap f (fromDirectory "test/example") `shouldReturn` exampleDayone
+      modTime <- getModTime
+      fmap f (fromDirectory "test/example") `shouldReturn` exampleDayone modTime
