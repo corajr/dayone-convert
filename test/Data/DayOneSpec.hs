@@ -55,8 +55,8 @@ entry2 = Entry
   }
 
 file1, file2 :: TextFile
-file1 = ("2016/08/15.txt", entryText1)
-file2 = ("2016/08/15.txt", entryText2)
+file1 = ("2016/08/2016-08-15.txt", entryText1)
+file2 = ("2016/08/2016-08-15.txt", entryText2)
 
 exampleParsed :: DayOne
 exampleParsed = DayOne
@@ -66,7 +66,7 @@ exampleParsed = DayOne
 
 exampleParsedFiles :: [TextFile]
 exampleParsedFiles =
-  [ ("2016" </> "08" </> "15.txt", combinedEntryText)
+  [ ("2016" </> "08" </> "2016-08-15.txt", combinedEntryText)
   ]
 
 exampleEntry :: UTCTime -> Entry
@@ -129,5 +129,5 @@ spec = do
         toDirectory path exampleParsed
         listDirectory path `shouldReturn` ["2016"]
         listDirectory (path </> "2016") `shouldReturn` ["08"]
-        listDirectory (path </> "2016" </> "08") `shouldReturn` ["15.txt"]
-        readFile (path </> "2016" </> "08" </> "15.txt") `shouldReturn` combinedEntryText
+        listDirectory (path </> "2016" </> "08") `shouldReturn` ["2016-08-15.txt"]
+        readFile (path </> "2016" </> "08" </> "2016-08-15.txt") `shouldReturn` combinedEntryText

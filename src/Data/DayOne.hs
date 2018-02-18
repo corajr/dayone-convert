@@ -2,15 +2,16 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Data.DayOne where
 
+import Control.Arrow ((&&&))
 import Data.Aeson (decode, encode)
 import Data.Aeson.TH
 import qualified Data.ByteString.Lazy.Char8 as BL
 import System.Environment (getArgs)
-import Data.Function (on)
+import Data.Semigroup
 import Data.DayOne.Opts hiding (Options)
 import Options.Applicative (execParser)
 import qualified Data.DayOne.Opts as Opts
-import Data.List (intercalate, groupBy)
+import Data.List.NonEmpty (groupWith)
 import Data.Time (UTCTime, defaultTimeLocale, formatTime)
 import Data.Char (toUpper)
 import Data.UUID (toString)
@@ -35,6 +36,15 @@ data Entry = Entry
   } deriving (Eq, Show)
 
 $(deriveJSON defaultOptions { omitNothingFields = True } ''Entry)
+
+instance Semigroup Entry where
+  e1 <> e2 = Entry
+    { tags = Nothing
+    , uuid = uuid e1
+    , starred = starred e1
+    , text = text e1 <> "\n\n" <> text e2
+    , creationDate = creationDate e1
+    }
 
 data DayOne = DayOne
   { metadata :: Metadata
@@ -72,18 +82,18 @@ fromDirectory path = do
                   , entries = entries
                   }
 
+getEntryFilename :: Entry -> FilePath
+getEntryFilename (Entry {creationDate}) =
+  formatTime defaultTimeLocale "%Y/%m/%Y-%m-%d.txt" creationDate
+
 toFile :: Entry -> TextFile
-toFile (Entry {creationDate, text}) = (convertDate creationDate, text)
-  where
-    convertDate = formatTime defaultTimeLocale "%Y/%m/%d.txt"
+toFile = getEntryFilename &&& text
 
 toFiles :: DayOne -> [TextFile]
-toFiles (DayOne _ entries) = flattened
+toFiles (DayOne _ entries) = files
   where
-    ungroupedFiles = map toFile entries
-    groupedFiles = groupBy ((==) `on` fst) ungroupedFiles
-    flattenFileGroup xs@((x, _):_) = (x, intercalate "\n\n" (map snd xs))
-    flattened = map flattenFileGroup groupedFiles
+    groupedEntries = groupWith (getEntryFilename) entries
+    files = map (toFile . sconcat) groupedEntries
 
 toDirectory :: FilePath -> DayOne -> IO ()
 toDirectory path = mapM_ writePlainText . toFiles
